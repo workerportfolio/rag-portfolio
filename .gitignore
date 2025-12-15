@@ -1,0 +1,40 @@
+# 環境変数ファイル
+.env
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+*.pyc
+*.pyo
+*.pyd
+*.log
+
+# バックアップ
+*.backup
+
+# テスト用ファイル
+debug_*.txt
+test_*.py
+
+# スクリーンショット（GitHub用には不要）
+screenshots/
+docs/
+
+# 動画（GitHub用には不要）
+*.mp4
+
+# 仮想環境
+venv/
+env/
+ENV/
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db
