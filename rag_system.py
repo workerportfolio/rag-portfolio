@@ -29,11 +29,11 @@ class RAGSystem:
         self.embedding_model = embedding_model
         
         if embedding_model == 'google':
-            print("\n📊 Google Embedding（768次元）を使用")
+            print("\n Google Embedding（768次元）を使用")
             self.embedder = GeminiEmbedding()
             self.table_name = 'documents_google_768'
         elif embedding_model == 'ollama':
-            print("\n📊 Ollama Embedding（1024次元）を使用")
+            print("\n Ollama Embedding（1024次元）を使用")
             self.embedder = OllamaEmbedding()
             self.table_name = 'documents_ollama_1024'
         else:
@@ -43,7 +43,7 @@ class RAGSystem:
         self.use_local_llm = use_local_llm
         
         if use_local_llm:
-            print("\n🤖 ローカルLLM（Ollama）を使用")
+            print("\n ローカルLLM（Ollama）を使用")
             self.llm = LocalLLM(
                 host="http://192.168.100.30:11434",
                 model="llama3.1:8b-instruct-q4_K_M"
@@ -52,7 +52,7 @@ class RAGSystem:
             if not self.llm.test_connection():
                 raise Exception("ローカルLLMへの接続に失敗しました")
         else:
-            print("\n☁️ クラウドLLM（Gemini）を使用")
+            print("\n クラウドLLM（Gemini）を使用")
             self.llm = CloudLLM()
         
         print("\n✅ RAGシステム初期化完了")

@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 """
-RAGシステム Streamlit WebUI
+RAG検証・評価システム Streamlit WebUI
 """
 
 import streamlit as st
@@ -12,58 +12,67 @@ import time
 
 # ページ設定
 st.set_page_config(
-    page_title="RAGシステム",
-    page_icon="🤖",
+    page_title="RAG検証・評価システム",
     layout="wide"
 )
 
 # タイトル
-st.title("🤖 RAGシステム - 質問応答WebUI")
+st.title("RAG検証・評価システム - 質問応答UI")
 st.markdown("---")
 
-# サイドバー: Embeddingモデル選択
-st.sidebar.header("⚙️ 設定")
+# サイドバー
+# #############################################
+st.sidebar.header("設定")
 
-st.sidebar.markdown("### 📊 Embeddingモデル選択")
+st.sidebar.markdown("### Embeddingモデル選択")
+
+embedding_model = st.sidebar.radio(
+    "使用Embeddingモデル",
+    options=['google', 'ollama'],
+    format_func=lambda x: "Google Embedding (768次元)" if x == 'google' else "Ollama Embedding (1024次元)",
+    index=0,
+    help="文書ベクトル化に使用するEmbeddingモデルを選択します"
+)
 
 # Embeddingモデル説明
-with st.sidebar.expander("ℹ️ Embeddingモデルの違いについて"):
+with st.sidebar.expander("Embeddingモデルの違い"):
     st.markdown("""
-    **📊 Google Embedding (768次元)**
+    **Google Embedding (768次元)**
     - モデル: text-embedding-004
     - コスト: API料金（月100万トークン無料）
     - 精度: 高い
     - 速度: 速い
-    
-    **📊 Ollama Embedding (1024次元)**
+    ---------------------------
+    **Ollama Embedding (1024次元)**
     - モデル: mxbai-embed-large
     - コスト: 無料（ローカル実行）
     - 精度: 中〜高
     - 速度: 中程度
     """)
 
-embedding_model = st.sidebar.radio(
-    "使用するEmbeddingモデル",
-    options=['google', 'ollama'],
-    format_func=lambda x: "📊 Google Embedding (768次元)" if x == 'google' else "📊 Ollama Embedding (1024次元)",
-    index=0,
-    help="文書のベクトル化に使用するEmbeddingモデルを選択します"
-)
 
 st.sidebar.markdown("---")
-st.sidebar.markdown("### 🤖 LLMモデル選択")
+st.sidebar.markdown("### LLMモデル選択")
+
+use_local_llm = st.sidebar.radio(
+    "使用LLM",
+    options=[True, False],
+    format_func=lambda x: "ローカルLLM (Ollama)" if x else "クラウドLLM (Gemini)",
+    index=0,
+    help="質問に応答するLLMを選択します"
+)
 
 # LLM説明
-with st.sidebar.expander("ℹ️ LLMの違いについて"):
+with st.sidebar.expander("LLMの違い"):
     st.markdown("""
-    **🤖 ローカルLLM (Ollama)**
+    **ローカルLLM (Ollama)**
     - モデル: llama3.1:8b
     - コスト: 無料
     - 速度: やや遅い（5-10秒）
     - プライバシー: 高い
     - 精度: 中程度
-    
-    **☁️ クラウドLLM (Gemini)**
+    ---------------------------   
+    **クラウドLLM (Gemini)**
     - モデル: gemini-2.0-flash-exp
     - コスト: API料金
     - 速度: 速い（2-5秒）
@@ -71,22 +80,47 @@ with st.sidebar.expander("ℹ️ LLMの違いについて"):
     - 精度: 高い
     """)
 
-use_local_llm = st.sidebar.radio(
-    "使用するLLM",
-    options=[True, False],
-    format_func=lambda x: "🤖 ローカルLLM (Ollama)" if x else "☁️ クラウドLLM (Gemini)",
-    index=0,
-    help="質問に応答するLLMを選択します"
-)
-
 st.sidebar.markdown("---")
-st.sidebar.markdown("### 📊 システム情報")
 
-# RAGシステム初期化（セッション状態で管理）
+# 現在の設定表示
+st.sidebar.markdown("### 現在の設定")
+
+# パターン判定
+if embedding_model == 'google' and use_local_llm:
+    pattern = "パターン1"
+    pattern_desc = "Google Embedding + llama3.1"
+elif embedding_model == 'google' and not use_local_llm:
+    pattern = "パターン2"
+    pattern_desc = "Google Embedding + Gemini"
+elif embedding_model == 'ollama' and use_local_llm:
+    pattern = "パターン3"
+    pattern_desc = "Ollama Embedding + llama3.1"
+else: #(embedding_model == 'ollama' and not use_local_llm:)
+    pattern = "パターン4"
+    pattern_desc = "Ollama Embedding + Gemini"
+
+# 組み合わせパターン
+st.sidebar.text(f"{pattern}")
+
+# Embeddingモデル表示
+embedding_info = "Google (768次元)" if embedding_model == 'google' else "Ollama (1024次元)"
+st.sidebar.text(f"Embedding: {embedding_info}")
+
+# LLMモデル表示
+llm_info = "ローカルLLM" if use_local_llm else "クラウドLLM"
+st.sidebar.text(f"LLM: {llm_info}")
+
+# テーブル名表示
+table_name = "documents_google_768" if embedding_model == 'google' else "documents_ollama_1024"
+st.sidebar.text(f"テーブル: {table_name}")
+
+st.sidebar.markdown("### システム情報")
+
+# RAG検証・評価システム初期化（セッション状態で管理）
 current_config = (use_local_llm, embedding_model)
 
 if 'rag' not in st.session_state or st.session_state.get('config') != current_config:
-    with st.spinner('RAGシステムを初期化中...'):
+    with st.spinner('RAG検証・評価システムを初期化中...'):
         try:
             st.session_state.rag = RAGSystem(
                 use_local_llm=use_local_llm,
@@ -100,55 +134,29 @@ if 'rag' not in st.session_state or st.session_state.get('config') != current_co
             st.sidebar.text(traceback.format_exc())
             st.stop()
 
-# 現在の設定表示
-st.sidebar.markdown("### 📋 現在の設定")
+# #############################################
 
-# パターン判定
-if embedding_model == 'google' and not use_local_llm:
-    pattern = "パターン1"
-    pattern_desc = "Google Embedding + Gemini"
-elif embedding_model == 'google' and use_local_llm:
-    pattern = "パターン2"
-    pattern_desc = "Google Embedding + llama3.1"
-elif embedding_model == 'ollama' and not use_local_llm:
-    pattern = "パターン3"
-    pattern_desc = "Ollama Embedding + Gemini"
-else:  # embedding_model == 'ollama' and use_local_llm
-    pattern = "パターン4"
-    pattern_desc = "Ollama Embedding + llama3.1"
-
-st.sidebar.info(f"**{pattern}**: {pattern_desc}")
-
-# Embeddingモデル表示
-embedding_info = "📊 Google (768次元)" if embedding_model == 'google' else "📊 Ollama (1024次元)"
-st.sidebar.text(f"Embedding: {embedding_info}")
-
-# LLMモデル表示
-llm_info = "🤖 ローカルLLM" if use_local_llm else "☁️ クラウドLLM"
-st.sidebar.text(f"LLM: {llm_info}")
-
-# テーブル名表示
-table_name = "documents_google_768" if embedding_model == 'google' else "documents_ollama_1024"
-st.sidebar.text(f"テーブル: {table_name}")
-
+# メイン画面
+# #############################################
 # セッション状態で会話履歴を管理
 if 'history' not in st.session_state:
     st.session_state.history = []
 
 # メインエリア: タブ構成
-tab1, tab2, tab3 = st.tabs(["💬 質問", "📄 ドキュメント追加", "📊 統計情報"])
+tab1, tab2, tab3 = st.tabs(["◆ 質問", "◆ 検索元データ追加", "◆ 統計情報"])
 
 # タブ1: 質問
 with tab1:
-    st.header("💬 質問してください")
+    st.header("◆ 質問してください")
     
-    question = st.text_input(
-        "質問を入力:",
-        placeholder="例: 機械学習とは何ですか？",
+    question = st.text_area(
+        "質問入力:",
+        placeholder="例: 登録データに基づいて◯◯を教えてください",
+        height=200,
         key="question_input"
     )
     
-    col1, col2 = st.columns([1, 4])
+    col1, col2 = st.columns([1, 1])
     
     with col1:
         submit_button = st.button("🔍 質問する", type="primary", use_container_width=True)
@@ -183,13 +191,13 @@ with tab1:
                     
                     # 回答表示
                     st.markdown("---")
-                    st.subheader("📝 回答")
+                    st.subheader("回答")
                     st.write(answer)
-                    st.caption(f"⏱️ 処理時間: {elapsed_time:.2f}秒 | {pattern}")
+                    st.caption(f"処理時間: {elapsed_time:.2f}秒 | {pattern}")
                     
                     # デバッグ情報表示
                     if debug_info:
-                        with st.expander("🔍 デバッグ情報（検索詳細）", expanded=True):
+                        with st.expander("デバッグ情報（検索詳細）", expanded=True):
                             col1, col2, col3 = st.columns(3)
                             
                             with col1:
@@ -208,7 +216,7 @@ with tab1:
                                 st.metric("切り捨て件数", discarded)
                             
                             # 検索結果一覧（rawベース）
-                            st.markdown("### 📊 検索結果（距離）")
+                            st.markdown("### 検索結果（距離）")
                             st.caption("※ 距離が小さいほど類似度が高い（cosine distance）")
                             
                             for item in debug_info['results_raw']:
@@ -246,22 +254,22 @@ with tab1:
     # 会話履歴表示
     if st.session_state.history:
         st.markdown("---")
-        st.subheader("📜 会話履歴")
+        st.subheader("会話履歴")
         
         for i, item in enumerate(reversed(st.session_state.history), 1):
             with st.expander(f"Q{len(st.session_state.history) - i + 1}: {item['question'][:50]}...", expanded=(i == 1)):
                 st.markdown(f"**質問:** {item['question']}")
                 st.markdown(f"**回答:** {item['answer']}")
-                st.caption(f"⏱️ {item['time']:.2f}秒 | {item.get('pattern', 'N/A')} | {item.get('embedding', 'N/A')} | {item.get('llm', 'N/A')}")
+                st.caption(f"{item['time']:.2f}秒 | {item.get('pattern', 'N/A')} | {item.get('embedding', 'N/A')} | {item.get('llm', 'N/A')}")
 
-# タブ2: ドキュメント追加
+# タブ2: 検索元データ追加
 with tab2:
-    st.header("📄 ドキュメント追加")
+    st.header("◆ データテキスト追加")
     
-    st.markdown("RAGシステムに新しいドキュメントを追加します。")
+    st.markdown("RAG検証・評価システムに新規検索元データを追加します。")
     
     doc_text = st.text_area(
-        "ドキュメントのテキスト:",
+        "データテキスト:",
         placeholder="例: Pythonは、汎用プログラミング言語の一つです...",
         height=150,
         key="doc_text"
@@ -284,7 +292,7 @@ with tab2:
             key="language"
         )
     
-    if st.button("➕ ドキュメント追加", type="primary"):
+    if st.button("＋ ドキュメント追加", type="primary"):
         if doc_text:
             with st.spinner('ドキュメントを追加中...'):
                 try:
@@ -307,7 +315,7 @@ with tab2:
 
 # タブ3: 統計情報
 with tab3:
-    st.header("📊 統計情報")
+    st.header("◆ 統計情報")
     
     try:
         db = DatabaseConnection()
@@ -332,7 +340,7 @@ with tab3:
             
             if st.session_state.history:
                 st.markdown("---")
-                st.subheader("⏱️ 処理時間統計")
+                st.subheader("処理時間統計")
                 
                 times = [item['time'] for item in st.session_state.history]
                 avg_time = sum(times) / len(times)
@@ -354,7 +362,8 @@ with tab3:
             
     except Exception as e:
         st.error(f"❌ 統計情報の取得に失敗しました: {e}")
+# #############################################
 
 # フッター
 st.markdown("---")
-st.caption("RAGシステム v1.0 - ローカルLLM & クラウドLLM対応")
+st.caption("RAG検証・評価システム v1.0 - ローカルLLM & クラウドLLM対応")
