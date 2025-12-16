@@ -161,6 +161,3 @@ streamlit run streamlit_app.py
 - 検索精度の定量評価（Precision, Recall）
 - pgvectorのインデックス違いによる戦略（IVFFLAT / HNSW）の検証
 - 次元数の違いが検索精度・回答品質に与える影響検証
-
-## 連絡先
-- GitHub: https://github.com/workerportfolio
