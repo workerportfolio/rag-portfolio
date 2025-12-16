@@ -2,13 +2,12 @@
 
 ## 概要
 複数のEmbeddingモデルとLLMの組み合わせを比較評価できるRAGシステム。
-PostgreSQL + pgvector を使用し、4パターンの構成で検索精度と回答品質を検証。
+PostgreSQL + pgvector を使用し、4パターンの構成で検索挙動および回答品質の違いを検証。
 
 ## プロジェクトの目的
 - 異なるEmbeddingモデル（Google / Ollama）の性能比較
 - 異なるLLM（Gemini / llama3.1）の回答品質比較
-- pgvectorのインデックス戦略（IVFFLAT / HNSW）の検証
-- RAGシステムの実装パターンの理解
+- RAGシステムにおける構成要素と実装パターンの理解
 
 ## 技術スタック
 - **バックエンド**: Python 3.11
@@ -23,11 +22,11 @@ PostgreSQL + pgvector を使用し、4パターンの構成で検索精度と回
 [VM1: PostgreSQL + pgvector] ⇄ [VM2: Python App + Streamlit] ⇄ [VM3: Ollama LLM Server]
 ```
 
-- **VM1 (192.168.100.10)**: PostgreSQL + pgvector
+- **VM1 (DBServer)**: PostgreSQL + pgvector
   - documents_google_768 テーブル
   - documents_ollama_1024 テーブル
-- **VM2 (192.168.100.20)**: Python Application + Streamlit WebUI
-- **VM3 (192.168.100.30)**: Ollama LLM Server
+- **VM2 (APIServer)**: Python Application + Streamlit WebUI
+- **VM3 (LLMServer)**: Ollama LLM Server
   - llama3.1:8b-instruct-q4_K_M
   - mxbai-embed-large
 
@@ -39,7 +38,7 @@ PostgreSQL + pgvector を使用し、4パターンの構成で検索精度と回
 - **パターン3**: Ollama Embedding (1024次元) + llama3.1
 - **パターン4**: Ollama Embedding (1024次元) + Gemini
 
-UIで簡単に切り替えて、同じ質問に対する検索精度と回答品質を比較可能。
+UIでパターンを簡単に切り替えて、同じ質問に対する検索精度と回答品質を比較可能。
 
 ### 2. 検索精度の可視化機能
 - 検索結果の距離（cosine distance）表示
@@ -62,7 +61,6 @@ UIで簡単に切り替えて、同じ質問に対する検索精度と回答品
 1. PostgreSQLで直接SQL実行して原因を特定
 2. インデックスなしでは正常動作を確認
 3. HNSWインデックスへの移行で解決
-4. pgvector 0.8.1 + IVFFLAT の既知の問題として文書化
 
 **成果:** システムが正常動作し、インデックス戦略の重要性を実証
 
@@ -80,7 +78,7 @@ UIで簡単に切り替えて、同じ質問に対する検索精度と回答品
 ## 開発プロセスと学習
 
 ### AI活用について
-本プロジェクトは、Claude (Anthropic) を積極的に活用して開発しました。
+本プロジェクトは、ChatGPT, Claude を積極的に活用して開発。
 
 **AIが支援した部分:**
 - Pythonコードの実装・デバッグ
@@ -89,7 +87,7 @@ UIで簡単に切り替えて、同じ質問に対する検索精度と回答品
 
 **自分で実施・判断した部分:**
 - システム全体のアーキテクチャ設計（3VM構成）
-- PostgreSQL + pgvectorのセットアップと運用
+- PostgreSQL + pgvectorのセットアップ
 - Hyper-V仮想環境の構築・ネットワーク設定
 - **IVFFLATインデックスバグの発見と解決プロセス**
   - 検索結果が0件になる問題の特定
@@ -99,17 +97,19 @@ UIで簡単に切り替えて、同じ質問に対する検索精度と回答品
 - 要件定義から完成までのプロジェクト管理
 
 ### なぜAIを活用したか
-1. **開発速度の向上**: 3ヶ月の予定を1ヶ月で完成
-2. **ベストプラクティスの学習**: AIとの対話を通じて最新の実装パターンを習得
-3. **本質的な問題解決に集中**: コーディング作業を効率化し、システム設計や問題分析に時間を投資
+1. **AIの利用価値の確認**: AIの業務利用への有用性確認
+2. **開発速度の向上**: 3ヶ月の予定を1ヶ月で完成
+3. **ベストプラクティスの学習**: AIとの対話を通じて最新の実装パターンを習得
+4. **本質的な問題解決に集中**: コーディング作業を効率化し、システム設計や問題分析に時間を投資
 
 ### 学んだこと
 AIとの協働開発を通じて、以下を深く理解しました:
-- RAGアーキテクチャの設計思想と実装パターン
+- RAGアーキテクチャの構成要素と実装パターン
 - ベクトルデータベースのインデックス戦略（IVFFLAT vs HNSW）
 - 複数のEmbeddingモデルの特性とトレードオフ
 - 効果的なプロンプトエンジニアリング手法
 - 問題の切り分けとデバッグの体系的なアプローチ
+- 各生成AIの得意・不得意分野の理解(使い分けの重要性)
 
 ## ファイル構成
 ```
@@ -132,7 +132,7 @@ rag-app/
 ### 1. 環境変数設定
 `.env` ファイルを作成:
 ```env
-DB_HOST=192.168.100.10
+DB_HOST=192.168.xxx.xxx
 DB_PORT=5432
 DB_NAME=rag_db
 DB_USER=rag_user
@@ -147,7 +147,10 @@ pip install -r requirements.txt
 
 ### 3. Streamlit起動
 ```bash
-streamlit run streamlit_app.py --server.port 8501 --server.address 0.0.0.0
+streamlit run streamlit_app.py
+
+※ VM上で起動し、別端末からアクセスする場合は
+`--server.address 0.0.0.0` を指定。
 ```
 
 ## 今後の拡張予定
@@ -156,6 +159,8 @@ streamlit run streamlit_app.py --server.port 8501 --server.address 0.0.0.0
 - メタデータフィルタリング機能（言語別、カテゴリ別検索）
 - Embeddingモデルのファインチューニング
 - 検索精度の定量評価（Precision, Recall）
+- pgvectorのインデックス違いによる戦略（IVFFLAT / HNSW）の検証
+- 次元数の違いが検索精度・回答品質に与える影響検証
 
 ## 連絡先
 - GitHub: https://github.com/workerportfolio
