@@ -6,7 +6,7 @@ PostgreSQL + pgvector を使用し、4パターンの構成で検索挙動およ
 
 ## プロジェクトの目的
 - 異なるEmbeddingモデル（Google / Ollama）の性能比較
-- 異なるLLM（Gemini / llama3.1）の回答品質比較
+- 異なるLLM（Gemini 2.0 Flash / llama3.1）の回答品質比較
 - RAGシステムにおける構成要素と実装パターンの理解
 
 ## 技術スタック
@@ -153,6 +153,12 @@ streamlit run streamlit_app.py
 `--server.address 0.0.0.0` を指定。
 ```
 
+## デモ動画
+**4パターンの比較デモ（1分）:**
+[デモ動画を見る](demo.mp4)
+※ 本デモは UI 操作の紹介ではなく、
+Embedding / LLM 切替による RAG 挙動の違いを示すことを目的としています。
+
 ## 今後の拡張予定
 - CSV一括登録機能（構造化データの一括投入）
 - ハイブリッド検索（ベクトル + キーワード検索）
@@ -161,3 +167,4 @@ streamlit run streamlit_app.py
 - 検索精度の定量評価（Precision, Recall）
 - pgvectorのインデックス違いによる戦略（IVFFLAT / HNSW）の検証
 - 次元数の違いが検索精度・回答品質に与える影響検証
+- ドキュメントへの添付ファイル対応（PDF / 画像）
