@@ -23,9 +23,6 @@ test_*.py
 screenshots/
 docs/
 
-# 動画（GitHub用には不要）
-*.mp4
-
 # 仮想環境
 venv/
 env/
