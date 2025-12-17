@@ -155,7 +155,7 @@ streamlit run streamlit_app.py
 
 ## デモ動画
 **4パターンの比較デモ（1分）:**
-[デモ動画を見る](demo.mp4)
+[デモ動画を見る](demo.mp4)  
 ※ 本デモは UI 操作の紹介ではなく、
 Embedding / LLM 切替による RAG 挙動の違いを示すことを目的としています。
 
