@@ -68,8 +68,8 @@ class VectorStore:
             create_index_query = f"""
             CREATE INDEX IF NOT EXISTS {self.table_name}_embedding_idx 
             ON {self.table_name} 
-            USING ivfflat (embedding vector_cosine_ops)
-            WITH (lists = 100);
+            USING hnsw (embedding vector_cosine_ops)
+            WITH (m = 16, ef_construction = 64);
             """
             
             print("\n[2] インデックス作成中...")
