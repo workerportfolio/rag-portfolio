@@ -37,7 +37,10 @@ class VectorStore:
         self.vector_type = config['vector_type']
         
         self.db = DatabaseConnection()
-    
+
+    # 将来的にはテーブルへの挿入、テーブル削除、テーブル更新処理も本pyに集約
+
+    # テーブル作成処理
     def create_table(self):
         """ベクトル検索用テーブル作成"""
         print("\n" + "=" * 50)
@@ -107,7 +110,8 @@ class VectorStore:
             return False
         finally:
             self.db.close()
-    
+
+    # 将来削除対象処理
     def drop_table(self):
         """テーブル削除（テスト用）"""
         if not self.db.connect():
@@ -125,6 +129,7 @@ class VectorStore:
         finally:
             self.db.close()
     
+    # テーブル情報取得処理
     def get_table_info(self):
         """テーブル情報を取得"""
         if not self.db.connect():

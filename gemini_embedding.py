@@ -19,13 +19,12 @@ class GeminiEmbedding:
         genai.configure(api_key=api_key)
         self.model = "models/text-embedding-004"
     
+    # ドキュメント(検索元データ)ベクトル化
     def get_embedding(self, text):
         """
         テキストをベクトル化
-        
         Args:
             text: ベクトル化するテキスト
-        
         Returns:
             ベクトル（リスト）、エラー時はNone
         """
@@ -33,25 +32,29 @@ class GeminiEmbedding:
             result = genai.embed_content(
                 model=self.model,
                 content=text,
-                task_type="retrieval_document"
+                task_type="retrieval_document"  # ドキュメント登録用 包括的・文書全体表現
             )
             
             # ベクトル取得
             embedding = result['embedding']
-            
+
+            # 次元数確認（768次元）
+            if len(embedding) != 768:
+                print(f"❌ 次元数エラー: {len(embedding)}次元（期待値: 768次元）")
+            return None
+
             return embedding
             
         except Exception as e:
             print(f"❌ Embedding生成エラー: {e}")
             return None
-    
+
+    # 質問テキストベクトル化    
     def get_query_embedding(self, text):
         """
         検索クエリをベクトル化
-        
         Args:
             text: ベクトル化する検索クエリ
-        
         Returns:
             ベクトル（リスト）、エラー時はNone
         """
@@ -59,7 +62,7 @@ class GeminiEmbedding:
             result = genai.embed_content(
                 model=self.model,
                 content=text,
-                task_type="retrieval_query"  # クエリ用
+                task_type="retrieval_query"  # クエリ用 キーワード・意味強調
             )
             
             # ベクトル取得
@@ -71,13 +74,12 @@ class GeminiEmbedding:
             print(f"❌ Embedding生成エラー: {e}")
             return None
     
+    #将来拡張検討用：現在未使用（元データ一括登録）
     def get_embeddings_batch(self, texts):
         """
         複数テキストを一括ベクトル化
-        
         Args:
             texts: テキストのリスト
-        
         Returns:
             ベクトルのリスト
         """

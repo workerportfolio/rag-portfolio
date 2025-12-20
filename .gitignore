@@ -14,6 +14,7 @@ __pycache__/
 
 # バックアップ
 *.backup
+backup/
 
 # テスト用ファイル
 debug_*.txt

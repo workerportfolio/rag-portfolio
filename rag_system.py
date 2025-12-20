@@ -44,10 +44,7 @@ class RAGSystem:
         
         if use_local_llm:
             print("\n ローカルLLM（Ollama）を使用")
-            self.llm = LocalLLM(
-                host="http://192.168.100.30:11434",
-                model="llama3.1:8b-instruct-q4_K_M"
-            )
+            self.llm = LocalLLM()
             # 接続テスト
             if not self.llm.test_connection():
                 raise Exception("ローカルLLMへの接続に失敗しました")

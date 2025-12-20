@@ -9,7 +9,7 @@ from dotenv import load_dotenv
 # 環境変数読み込み
 load_dotenv()
 
-# リストをPostgreSQL vector型に変換する関数
+# リストをPostgreSQL vector型に変換する関数(psycopg2 特性のため必要処理)
 def adapt_list_to_vector(lst):
     """
     PythonのリストをPostgreSQLのvector型文字列に変換
@@ -35,6 +35,7 @@ class DatabaseConnection:
         self.user = os.getenv("DB_USER")
         self.password = os.getenv("DB_PASSWORD")
     
+    # データベース接続処理
     def connect(self):
         """データベース接続"""
         try:
@@ -52,6 +53,7 @@ class DatabaseConnection:
             print(f"❌ データベース接続エラー: {e}")
             return False
     
+    # データベース切断処理
     def close(self):
         """データベース接続を閉じる"""
         if self.cursor:
@@ -60,6 +62,7 @@ class DatabaseConnection:
             self.connection.close()
         print("✅ データベース接続を閉じました")
     
+    # クエリ実行処理
     def execute(self, query, params=None):
         """クエリ実行"""
         try:
@@ -83,6 +86,7 @@ class DatabaseConnection:
             traceback.print_exc()
             return None
     
+    # コミット処理
     def commit(self):
         """コミット"""
         if self.connection:
@@ -97,8 +101,6 @@ if __name__ == "__main__":
         db.execute("SELECT version();")
         result = db.cursor.fetchone()
         print(f"\nPostgreSQL: {result[0]}")
-        
-
 
         # Pgvectorテスト
         db.execute("SELECT '[1,2,3]'::vector;")

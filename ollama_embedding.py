@@ -19,13 +19,12 @@ class OllamaEmbedding:
         self.base_url = base_url
         self.model = "mxbai-embed-large"
     
+    # ドキュメント(検索元データ)ベクトル化
     def get_embedding(self, text):
         """
         テキストをベクトル化
-        
         Args:
             text: ベクトル化するテキスト
-        
         Returns:
             ベクトル（リスト）、エラー時はNone
         """
@@ -61,6 +60,7 @@ class OllamaEmbedding:
             print(f"❌ Embedding生成エラー: {e}")
             return None
     
+    # 質問テキストベクトル化 
     def get_query_embedding(self, text):
         """
         検索クエリをベクトル化
@@ -74,13 +74,12 @@ class OllamaEmbedding:
         # Ollamaでは文書とクエリの区別がないため、get_embeddingと同じ
         return self.get_embedding(text)
     
+    #将来拡張検討用：現在未使用（元データ一括登録）    
     def get_embeddings_batch(self, texts):
         """
         複数テキストを一括ベクトル化
-        
         Args:
             texts: テキストのリスト
-        
         Returns:
             ベクトルのリスト
         """
@@ -97,10 +96,10 @@ class OllamaEmbedding:
             print(f"❌ Embedding生成エラー: {e}")
             return None
     
+    # ヘルスチェック接続
     def test_connection(self):
         """
         Ollama APIへの接続テスト
-        
         Returns:
             bool: 接続成功時True、失敗時False
         """
