@@ -44,7 +44,7 @@ with st.sidebar.expander("Embeddingモデルの違い"):
     - 速度: 速い
     ---------------------------
     **Ollama Embedding (1024次元)**
-    - モデル: mxbai-embed-large
+    - モデル: 
     - コスト: 無料（ローカル実行）
     - 精度: 中〜高
     - 速度: 中程度

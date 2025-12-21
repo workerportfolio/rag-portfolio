@@ -41,7 +41,7 @@ class GeminiEmbedding:
             # 次元数確認（768次元）
             if len(embedding) != 768:
                 print(f"❌ 次元数エラー: {len(embedding)}次元（期待値: 768次元）")
-            return None
+                return None
 
             return embedding
             

@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
+import json
 from db_connection import DatabaseConnection
 
 class VectorStore:
@@ -37,8 +38,6 @@ class VectorStore:
         self.vector_type = config['vector_type']
         
         self.db = DatabaseConnection()
-
-    # 将来的にはテーブルへの挿入、テーブル削除、テーブル更新処理も本pyに集約
 
     # テーブル作成処理
     def create_table(self):
@@ -110,24 +109,6 @@ class VectorStore:
             return False
         finally:
             self.db.close()
-
-    # 将来削除対象処理
-    def drop_table(self):
-        """テーブル削除（テスト用）"""
-        if not self.db.connect():
-            return False
-        
-        try:
-            drop_query = f"DROP TABLE IF EXISTS {self.table_name} CASCADE;"
-            self.db.execute(drop_query)
-            self.db.commit()
-            print(f"✅ {self.table_name} 削除完了")
-            return True
-        except Exception as e:
-            print(f"❌ エラー: {e}")
-            return False
-        finally:
-            self.db.close()
     
     # テーブル情報取得処理
     def get_table_info(self):
@@ -149,6 +130,123 @@ class VectorStore:
         except Exception as e:
             print(f"❌ エラー: {e}")
             return None
+        finally:
+            self.db.close()
+
+    # テーブル挿入処理
+    def insert_document(self, text: str, embedding: list, metadata: dict = None) -> int:
+        """
+        ドキュメントを挿入
+        Args:
+            text: ドキュメントテキスト
+            embedding: ベクトル（リスト）
+            metadata: メタデータ
+        Returns:
+            ドキュメントID
+        """
+        if not self.db.connect():
+            return None
+        
+        try:
+            insert_query = f"""
+            INSERT INTO {self.table_name} (document_text, embedding, metadata)
+            VALUES (%s, %s, %s)
+            RETURNING id;
+            """
+            
+            result = self.db.execute(
+                insert_query,
+                (text, embedding, json.dumps(metadata) if metadata else None)
+            )
+            
+            self.db.commit()
+            
+            if result:
+                return result[0][0]
+            return None
+            
+        except Exception as e:
+            print(f"❌ エラー: {e}")
+            return None
+        finally:
+            self.db.close()
+    
+    # ベクトル検索処理
+    def search_similar(self, query_embedding: list, top_k: int = 3, embedding_model: str = None) -> dict:
+        """
+        類似ドキュメントを検索（デバッグ情報付き）
+        Args:
+            query_embedding: クエリベクトル
+            top_k: 取得件数
+            embedding_model: Embeddingモデル名（デバッグ情報用）
+        Returns:
+            検索結果とデバッグ情報の辞書
+        """
+        if not self.db.connect():
+            return {'results': [], 'debug_info': None}
+        
+        try:
+            vector_str = '[' + ','.join(map(str, query_embedding)) + ']'
+            
+            search_query = f"""
+            SELECT 
+                id,
+                document_text,
+                metadata,
+                embedding <=> '{vector_str}'::vector({self.embedding_dim}) as distance
+            FROM {self.table_name}
+            ORDER BY embedding <=> '{vector_str}'::vector({self.embedding_dim})
+            LIMIT %s;
+            """
+            
+            self.db.cursor.execute(search_query, (top_k,))
+            results_raw = self.db.cursor.fetchall()
+            
+            # デバッグ情報構築
+            debug_info = {
+                'table_name': self.table_name,
+                'embedding_model': embedding_model,
+                'embedding_dim': len(query_embedding),
+                'top_k_raw': len(results_raw),
+                'threshold': None,
+                'results_raw': [],
+                'results_filtered': [],
+                'filtered_count': 0,
+                'discarded_reasons': []
+            }
+            
+            # 結果整形
+            results_filtered = []
+            for i, (doc_id, text, metadata, distance) in enumerate(results_raw, 1):
+                debug_info['results_raw'].append({
+                    'rank': i,
+                    'id': doc_id,
+                    'distance': distance,
+                    'text_preview': text[:100]
+                })
+                
+                results_filtered.append({
+                    'id': doc_id,
+                    'text': text,
+                    'metadata': metadata,
+                    'distance': distance
+                })
+                
+                debug_info['results_filtered'].append({
+                    'id': doc_id,
+                    'distance': distance
+                })
+            
+            debug_info['filtered_count'] = len(results_filtered)
+            
+            return {
+                'results': results_filtered,
+                'debug_info': debug_info
+            }
+            
+        except Exception as e:
+            print(f"❌ エラー: {e}")
+            return {'results': [], 'debug_info': None}
         finally:
             self.db.close()
 
